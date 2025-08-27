@@ -1,10 +1,10 @@
 import sqlite3
 
-# Connect to SQLite database
+# Connect to SQLite
 conn = sqlite3.connect("nike_store.db", check_same_thread=False)
 c = conn.cursor()
 
-# Create users table
+# --- Create tables safely ---
 c.execute('''
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ''')
 
-# Create products table
 c.execute('''
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +23,6 @@ CREATE TABLE IF NOT EXISTS products (
 )
 ''')
 
-# Create orders table
 c.execute('''
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +35,7 @@ CREATE TABLE IF NOT EXISTS orders (
 ''')
 conn.commit()
 
-# Add sample products if empty
+# --- Add sample products if empty ---
 c.execute("SELECT COUNT(*) FROM products")
 if c.fetchone()[0] == 0:
     products = [
@@ -73,13 +71,22 @@ def get_products():
 
 # --- Order functions ---
 def add_order(user_id, product_id, quantity):
-    c.execute("INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)", (user_id, product_id, quantity))
-    conn.commit()
+    try:
+        c.execute("INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)", (user_id, product_id, quantity))
+        conn.commit()
+    except Exception as e:
+        print("Error adding order:", e)
 
 def get_user_orders(user_id):
-    c.execute('''
-        SELECT p.name, p.price, o.quantity
-        FROM orders o JOIN products p ON o.product_id = p.id
-        WHERE o.user_id=?
-    ''', (user_id,))
-    return c.fetchall()
+    # Safe query with empty check
+    try:
+        c.execute('''
+            SELECT p.name, p.price, o.quantity
+            FROM orders o
+            JOIN products p ON o.product_id = p.id
+            WHERE o.user_id=?
+        ''', (user_id,))
+        return c.fetchall()
+    except sqlite3.OperationalError:
+        return []
+
