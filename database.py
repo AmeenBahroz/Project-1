@@ -4,7 +4,7 @@ import sqlite3
 conn = sqlite3.connect("nike_store.db", check_same_thread=False)
 c = conn.cursor()
 
-# Create tables
+# Users table
 c.execute('''
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ''')
 
+# Products table
 c.execute('''
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS products (
 )
 ''')
 
+# Orders table
 c.execute('''
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +48,7 @@ if c.fetchone()[0] == 0:
     c.executemany("INSERT INTO products (name, price, image, category) VALUES (?, ?, ?, ?)", products)
     conn.commit()
 
-# Functions
+# User functions
 def register_user(username, password):
     try:
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
@@ -59,10 +61,12 @@ def login_user(username, password):
     c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
     return c.fetchone()
 
+# Product functions
 def get_products():
     c.execute("SELECT * FROM products")
     return c.fetchall()
 
+# Order functions
 def add_order(user_id, product_id, quantity):
     c.execute("INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)", (user_id, product_id, quantity))
     conn.commit()
@@ -74,3 +78,4 @@ def get_user_orders(user_id):
         WHERE o.user_id=?
     ''', (user_id,))
     return c.fetchall()
+
