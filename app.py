@@ -1,57 +1,107 @@
-# app.py
-import streamlit as st
-import pandas as pd
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ShoppingBag } from "lucide-react";
 
-# App title
-st.set_page_config(page_title="Data Dashboard", page_icon="📊", layout="wide")
-st.title("📊 Interactive Data Dashboard")
+export default function NikeStyleLanding() {
+  const products = [
+    {
+      name: "Air Max 270",
+      price: "$150",
+      image: "https://images.unsplash.com/photo-1606813903134-45c28b953b3f",
+    },
+    {
+      name: "Jordan Retro",
+      price: "$200",
+      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
+    },
+    {
+      name: "Blazer Mid '77",
+      price: "$120",
+      image: "https://images.unsplash.com/photo-1595950653171-47c33e5f1d6e",
+    },
+  ];
 
-# Sidebar
-st.sidebar.header("Upload Your Data")
-uploaded_file = st.sidebar.file_uploader("Upload a CSV file", type=["csv"])
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-black to-gray-800 text-white px-8 py-20 flex flex-col items-center justify-center text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl font-extrabold mb-4"
+        >
+          Step Into Style
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-lg max-w-xl"
+        >
+          Explore our premium sneakers designed for comfort, performance, and unbeatable style.
+        </motion.p>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.7, type: "spring" }}
+          className="mt-6"
+        >
+          <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full px-8 py-3">
+            Shop Now
+          </Button>
+        </motion.div>
+      </section>
 
-if uploaded_file is not None:
-    # Load data
-    df = pd.read_csv(uploaded_file)
-    st.success("✅ File uploaded successfully!")
-    
-    # Show raw data
-    st.subheader("📄 Data Preview")
-    st.dataframe(df.head())
+      {/* Product Section */}
+      <section className="px-8 py-16">
+        <h2 className="text-3xl font-bold text-center mb-12">Featured Sneakers</h2>
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {products.map((product, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              viewport={{ once: true }}
+            >
+              <Card className="shadow-xl hover:shadow-2xl transition-all rounded-2xl overflow-hidden">
+                <img src={product.image} alt={product.name} className="w-full h-64 object-cover" />
+                <CardContent className="p-4 flex flex-col items-center">
+                  <h3 className="text-xl font-semibold">{product.name}</h3>
+                  <p className="text-lg text-gray-600">{product.price}</p>
+                  <Button className="mt-4 bg-black text-white hover:bg-gray-800 rounded-full">
+                    <ShoppingBag className="mr-2 h-4 w-4" /> Add to Cart
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-    # Show basic info
-    st.subheader("📈 Dataset Overview")
-    st.write(f"Rows: {df.shape[0]} | Columns: {df.shape[1]}")
-    st.write("**Summary Statistics:**")
-    st.write(df.describe())
+      {/* Call to Action */}
+      <section className="bg-black text-white py-20 text-center">
+        <motion.h2
+          initial={{ opacity: 0, y: -50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl font-bold mb-6"
+        >
+          Elevate Your Game
+        </motion.h2>
+        <p className="mb-8 text-lg max-w-2xl mx-auto">
+          Experience sneakers that blend cutting-edge design with ultimate comfort.
+        </p>
+        <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white rounded-full px-8 py-3">
+          Explore Collection
+        </Button>
+      </section>
+    </div>
+  );
+}
 
-    # Column selection for charts
-    numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    if numeric_cols:
-        st.subheader("📊 Visualizations")
-
-        # Histogram
-        col = st.selectbox("Choose a column for Histogram", numeric_cols)
-        st.bar_chart(df[col].value_counts())
-
-        # Scatter plot
-        st.subheader("Scatter Plot")
-        x_axis = st.selectbox("X-axis", numeric_cols, index=0)
-        y_axis = st.selectbox("Y-axis", numeric_cols, index=min(1, len(numeric_cols)-1))
-        st.scatter_chart(df[[x_axis, y_axis]])
-    else:
-        st.warning("No numeric columns available for visualization.")
-
-    # Download button
-    st.subheader("💾 Download Data")
-    csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "Download CSV",
-        csv,
-        "processed_data.csv",
-        "text/csv",
-        key="download-csv"
-    )
-else:
-    st.info("👈 Please upload a CSV file to start.")
 
