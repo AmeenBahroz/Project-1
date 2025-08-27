@@ -1,10 +1,10 @@
 import sqlite3
 
-# Connect to SQLite
+# Connect to SQLite database
 conn = sqlite3.connect("nike_store.db", check_same_thread=False)
 c = conn.cursor()
 
-# Users table
+# Create users table
 c.execute('''
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ''')
 
-# Products table
+# Create products table
 c.execute('''
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS products (
 )
 ''')
 
-# Orders table
+# Create orders table
 c.execute('''
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,25 +48,30 @@ if c.fetchone()[0] == 0:
     c.executemany("INSERT INTO products (name, price, image, category) VALUES (?, ?, ?, ?)", products)
     conn.commit()
 
-# User functions
+# --- User functions ---
 def register_user(username, password):
     try:
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         conn.commit()
-        return True
-    except:
-        return False
+        return True, "Registration successful!"
+    except sqlite3.IntegrityError:
+        return False, "Username already exists!"
+    except Exception as e:
+        return False, str(e)
 
 def login_user(username, password):
     c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-    return c.fetchone()
+    user = c.fetchone()
+    if user:
+        return True, user
+    return False, "Invalid username or password"
 
-# Product functions
+# --- Product functions ---
 def get_products():
     c.execute("SELECT * FROM products")
     return c.fetchall()
 
-# Order functions
+# --- Order functions ---
 def add_order(user_id, product_id, quantity):
     c.execute("INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)", (user_id, product_id, quantity))
     conn.commit()
@@ -78,4 +83,3 @@ def get_user_orders(user_id):
         WHERE o.user_id=?
     ''', (user_id,))
     return c.fetchall()
-
