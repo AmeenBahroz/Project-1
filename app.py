@@ -1,7 +1,6 @@
 # app.py
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
 # App title
 st.set_page_config(page_title="Data Dashboard", page_icon="📊", layout="wide")
@@ -26,28 +25,22 @@ if uploaded_file is not None:
     st.write("**Summary Statistics:**")
     st.write(df.describe())
 
-    # Column selection
+    # Column selection for charts
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
     if numeric_cols:
         st.subheader("📊 Visualizations")
 
         # Histogram
         col = st.selectbox("Choose a column for Histogram", numeric_cols)
-        fig, ax = plt.subplots()
-        ax.hist(df[col], bins=20, color="skyblue", edgecolor="black")
-        ax.set_title(f"Histogram of {col}")
-        st.pyplot(fig)
+        st.bar_chart(df[col].value_counts())
 
         # Scatter plot
         st.subheader("Scatter Plot")
         x_axis = st.selectbox("X-axis", numeric_cols, index=0)
         y_axis = st.selectbox("Y-axis", numeric_cols, index=min(1, len(numeric_cols)-1))
-        fig, ax = plt.subplots()
-        ax.scatter(df[x_axis], df[y_axis], alpha=0.6)
-        ax.set_xlabel(x_axis)
-        ax.set_ylabel(y_axis)
-        ax.set_title(f"{y_axis} vs {x_axis}")
-        st.pyplot(fig)
+        st.scatter_chart(df[[x_axis, y_axis]])
+    else:
+        st.warning("No numeric columns available for visualization.")
 
     # Download button
     st.subheader("💾 Download Data")
@@ -61,3 +54,4 @@ if uploaded_file is not None:
     )
 else:
     st.info("👈 Please upload a CSV file to start.")
+
