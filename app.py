@@ -1,15 +1,16 @@
 import streamlit as st
 from database import register_user, login_user, get_products, add_order, get_user_orders
 
+# Page config
 st.set_page_config(page_title="Nike Store Dashboard", page_icon="👟", layout="wide")
 
-# Session state
+# --- Session State ---
 if "user" not in st.session_state:
     st.session_state.user = None
 if "cart" not in st.session_state:
     st.session_state.cart = []
 
-# --- LOGIN / REGISTER ---
+# --- Login/Register ---
 if st.session_state.user is None:
     st.title("👟 Nike Store Login / Register")
     tab = st.radio("Select Option", ["Login", "Register"])
@@ -31,12 +32,12 @@ if st.session_state.user is None:
         else:
             st.error(result)
 
-# --- DASHBOARD ---
+# --- Dashboard ---
 if st.session_state.user is not None:
     user = st.session_state.user
     st.title(f"Welcome, {user[1]} 👟")
 
-    # Sidebar: Cart
+    # Sidebar: Shopping Cart
     st.sidebar.header("🛒 Shopping Cart")
     total = 0
     for item in st.session_state.cart:
@@ -51,18 +52,25 @@ if st.session_state.user is not None:
 
     # Product Catalog
     st.subheader("🏷️ Product Catalog")
-    categories = ["All"] + list(set([p[4] for p in get_products()]))
+    products = get_products()
+    # Safe category extraction
+    if products:
+        categories = ["All"] + list({p[4] if len(p) > 4 else "Uncategorized" for p in products})
+    else:
+        categories = ["All"]
+
     selected_category = st.selectbox("Filter by Category", categories)
     search_query = st.text_input("Search by Name")
 
-    products = get_products()
-    if selected_category != "All":
-        products = [p for p in products if p[4] == selected_category]
-    if search_query:
-        products = [p for p in products if search_query.lower() in p[1].lower()]
+    # Filter products
+    filtered_products = []
+    for p in products:
+        category = p[4] if len(p) > 4 else "Uncategorized"
+        if (selected_category == "All" or category == selected_category) and (search_query.lower() in p[1].lower() if search_query else True):
+            filtered_products.append(p)
 
     cols = st.columns(3)
-    for idx, product in enumerate(products):
+    for idx, product in enumerate(filtered_products):
         with cols[idx % 3]:
             st.image(product[3], use_column_width=True)
             st.subheader(product[1])
