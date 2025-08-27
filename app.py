@@ -1,16 +1,16 @@
 import streamlit as st
 from database import register_user, login_user, get_products, add_order, get_user_orders
 
-# Page config
+# --- Page config ---
 st.set_page_config(page_title="Nike Store Dashboard", page_icon="👟", layout="wide")
 
-# --- Session State ---
+# --- Session state ---
 if "user" not in st.session_state:
     st.session_state.user = None
 if "cart" not in st.session_state:
     st.session_state.cart = []
 
-# --- Login/Register ---
+# --- LOGIN / REGISTER ---
 if st.session_state.user is None:
     st.title("👟 Nike Store Login / Register")
     tab = st.radio("Select Option", ["Login", "Register"])
@@ -32,12 +32,12 @@ if st.session_state.user is None:
         else:
             st.error(result)
 
-# --- Dashboard ---
+# --- DASHBOARD ---
 if st.session_state.user is not None:
     user = st.session_state.user
     st.title(f"Welcome, {user[1]} 👟")
 
-    # Sidebar: Shopping Cart
+    # --- Sidebar: Cart ---
     st.sidebar.header("🛒 Shopping Cart")
     total = 0
     for item in st.session_state.cart:
@@ -50,10 +50,11 @@ if st.session_state.user is not None:
         st.sidebar.success("✅ Order placed!")
         st.session_state.cart = []
 
-    # Product Catalog
+    # --- Product Catalog ---
     st.subheader("🏷️ Product Catalog")
     products = get_products()
-    # Safe category extraction
+
+    # Safe category handling
     if products:
         categories = ["All"] + list({p[4] if len(p) > 4 else "Uncategorized" for p in products})
     else:
@@ -69,6 +70,7 @@ if st.session_state.user is not None:
         if (selected_category == "All" or category == selected_category) and (search_query.lower() in p[1].lower() if search_query else True):
             filtered_products.append(p)
 
+    # Display products
     cols = st.columns(3)
     for idx, product in enumerate(filtered_products):
         with cols[idx % 3]:
@@ -85,7 +87,7 @@ if st.session_state.user is not None:
                 })
                 st.success(f"Added {qty} x {product[1]} to cart")
 
-    # Dashboard Stats
+    # --- Dashboard Stats ---
     st.subheader("📊 Dashboard Stats")
     orders = get_user_orders(user[0])
     total_orders = len(orders)
@@ -97,7 +99,7 @@ if st.session_state.user is not None:
     col2.metric("Total Spent ($)", total_spent)
     col3.metric("Products Bought", total_products)
 
-    # Order History
+    # --- Order History ---
     st.subheader("📄 Order History")
     if orders:
         for o in orders:
