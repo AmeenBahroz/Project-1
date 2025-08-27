@@ -1,7 +1,6 @@
 import streamlit as st
 from database import register_user, login_user, get_products, add_order, get_user_orders
 
-# --- Page config ---
 st.set_page_config(page_title="Nike Store Dashboard", page_icon="👟", layout="wide")
 
 # --- Session state ---
@@ -10,7 +9,7 @@ if "user" not in st.session_state:
 if "cart" not in st.session_state:
     st.session_state.cart = []
 
-# --- LOGIN / REGISTER ---
+# --- Login/Register ---
 if st.session_state.user is None:
     st.title("👟 Nike Store Login / Register")
     tab = st.radio("Select Option", ["Login", "Register"])
@@ -32,12 +31,12 @@ if st.session_state.user is None:
         else:
             st.error(result)
 
-# --- DASHBOARD ---
+# --- Dashboard ---
 if st.session_state.user is not None:
     user = st.session_state.user
     st.title(f"Welcome, {user[1]} 👟")
 
-    # --- Sidebar: Cart ---
+    # --- Sidebar: Shopping Cart ---
     st.sidebar.header("🛒 Shopping Cart")
     total = 0
     for item in st.session_state.cart:
@@ -50,11 +49,9 @@ if st.session_state.user is not None:
         st.sidebar.success("✅ Order placed!")
         st.session_state.cart = []
 
-    # --- Product Catalog ---
+    # --- Product Catalog with Hover Cards ---
     st.subheader("🏷️ Product Catalog")
     products = get_products()
-
-    # Safe category handling
     if products:
         categories = ["All"] + list({p[4] if len(p) > 4 else "Uncategorized" for p in products})
     else:
@@ -63,21 +60,32 @@ if st.session_state.user is not None:
     selected_category = st.selectbox("Filter by Category", categories)
     search_query = st.text_input("Search by Name")
 
-    # Filter products
     filtered_products = []
     for p in products:
         category = p[4] if len(p) > 4 else "Uncategorized"
         if (selected_category == "All" or category == selected_category) and (search_query.lower() in p[1].lower() if search_query else True):
             filtered_products.append(p)
 
-    # Display products
+    # Display products in cards
     cols = st.columns(3)
     for idx, product in enumerate(filtered_products):
         with cols[idx % 3]:
-            st.image(product[3], use_column_width=True)
-            st.subheader(product[1])
-            st.write(f"${product[2]}")
-            qty = st.number_input(f"Quantity ({product[1]})", min_value=1, max_value=10, key=f"qty{product[0]}")
+            # Card with hover effect using markdown
+            card_html = f"""
+            <div style="
+                border:1px solid #eee;
+                border-radius:15px;
+                padding:10px;
+                text-align:center;
+                transition: transform 0.2s;
+            " onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                <img src="{product[3]}" style="width:100%; border-radius:10px;">
+                <h4>{product[1]}</h4>
+                <p style="font-weight:bold;">${product[2]}</p>
+            </div>
+            """
+            st.markdown(card_html, unsafe_allow_html=True)
+            qty = st.number_input(f"Qty ({product[1]})", min_value=1, max_value=10, key=f"qty{product[0]}")
             if st.button("Add to Cart", key=f"add{product[0]}"):
                 st.session_state.cart.append({
                     "id": product[0],
@@ -95,9 +103,9 @@ if st.session_state.user is not None:
     total_products = sum([o[2] for o in orders])
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Orders", total_orders)
-    col2.metric("Total Spent ($)", total_spent)
-    col3.metric("Products Bought", total_products)
+    col1.metric("Total Orders", total_orders, delta=f"+{total_orders*2}")  # Animated delta
+    col2.metric("Total Spent ($)", total_spent, delta=f"+${total_spent*0.05:.2f}")
+    col3.metric("Products Bought", total_products, delta=f"+{total_products}")
 
     # --- Order History ---
     st.subheader("📄 Order History")
